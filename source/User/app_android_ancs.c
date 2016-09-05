@@ -6,8 +6,6 @@
 static uint8_t g_retry_count = 0;     //挂断重试次数
 static uint8_t g_action_type = 0;     //备份接听还是挂断
 
-static uint8_t g_message_count = 0,g_wechat_count = 0;
-
 static remainder_head_st g_reminder_head;
 
 
@@ -199,6 +197,7 @@ void app_android_ancs_receive_data(uint8_t *data, uint16_t length,uint8_t ucFram
 	uint16_t i;
 	uint32_t ucMsgID = 0;
 	static uint32_t preTime = 0;
+	remainder_st *rSt = get_remainder_info();
 
 	ucCmdID 	= *(data);														  //命令ID
 	ucCmdType 	= *(data + 1); 													  //命令类型
@@ -256,51 +255,36 @@ void app_android_ancs_receive_data(uint8_t *data, uint16_t length,uint8_t ucFram
 		ucMsgLen <<= 8;
 		ucMsgLen += *pContent++;													  //信息长度，2bytes
 
-		if(preTime == 0)
-		{
-			preTime = time;
-		}
-
 		if(time - preTime > 2)
 		{
-			preTime = time;
-			g_message_count = 0;
-			g_wechat_count = 0;
+			rSt->message_count = 0;
+			rSt->wechat_count = 0;
 		}
-		switch (ucAPPID)
-		{
-			case BLE_ANCS_APP_ID_MSG:
-				g_message_count++;
-				ucRPType = MESSAGE_REMAIND; 											   //短信提醒
-				break;
-			case BLE_ANCS_APP_ID_WECHAT:
-				g_wechat_count++;
-				ucRPType = WECHAT_REMAIND;												   //微信提醒
-				break;
-			default:
-				ucRPType = 0xFF;
-				break;
-		}
-
+		preTime = time;
+		
 		if (ucCmdType == BLE_ANCS_EVENT_ID_NOTIFICATION_ADDED)						  //判断是否是新增信息通知
 		{
+			switch (ucAPPID)
+			{
+				case BLE_ANCS_APP_ID_MSG:
+					rSt->message_count++;
+					ucRPType = MESSAGE_REMAIND; 											   //短信提醒
+					break;
+				case BLE_ANCS_APP_ID_WECHAT:
+					rSt->wechat_count++;
+					ucRPType = WECHAT_REMAIND;												   //微信提醒
+					break;
+				default:
+					ucRPType = 0xFF;
+					break;
+			}
+			
 			if(ucRPType == MESSAGE_REMAIND || ucRPType == WECHAT_REMAIND)
 			{	
-				remainder_st *rSt = get_remainder_info();
-				
-				if(ucRPType == MESSAGE_REMAIND)
-				{
-					rSt->message_count = g_message_count;
-				}
-				else if(ucRPType == WECHAT_REMAIND)
-				{
-					rSt->wechat_count = g_wechat_count;
-				}
-
 				g_reminder_head.phone_type 	= ANDROID_TYPE;
 				g_reminder_head.msg_id 		= ucMsgID;
 				g_reminder_head.remaind_type= ucRPType;
-				g_reminder_head.time	= time;
+				g_reminder_head.time		= time;
 
 				if(ucMsgLen >= TITLE_DATA_SIZE)
 					ucMsgLen = TITLE_DATA_SIZE-1;

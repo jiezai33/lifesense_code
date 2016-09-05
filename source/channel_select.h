@@ -44,6 +44,7 @@ extern communication_statue_st g_communication_statue;
 
 void usr_set_app_type(app_enum type);
 uint32_t app_send_data(uint8_t *data,uint16_t length);
+uint32_t usr_send_data(uint8_t *data,uint16_t length);
 uint32_t app_add_heap_send_data(uint8_t data_type,uint8_t data_id,uint8_t *data,uint16_t length);
 #endif
 

@@ -36,11 +36,23 @@ typedef struct
     uint16_t usTxDataPackSequence;
 } WeChatPackHeader;
 
+typedef struct
+{
+    uint16_t usTxDataPackSeq;
+    uint8_t  usTxDataFrameSeq;
+    uint8_t  usLength;
+    uint8_t  usCmdID;
+    uint8_t  usTxDataType;
+} trans_header_st;
+
 
 extern uint16_t       usTxWeChatPackSeq;
 extern uint8_t ucDataAfterPack[220];
 
-uint8_t    WechatPacketHead(WeChatPackHeader struWeChatPackHead, uint8_t *pInData,uint8_t *pOutData);
+uint8_t    app_add_wechat_head(WeChatPackHeader struWeChatPackHead, uint8_t *pInData,uint8_t *pOutData);
+
+uint8_t app_pack_data(uint8_t* pInData, uint8_t Unlen, uint8_t* pOutData);
+uint8_t app_add_pack_head(trans_header_st head,uint8_t *in_data,uint8_t *out_data,uint8_t bdata);
 
 #endif
 

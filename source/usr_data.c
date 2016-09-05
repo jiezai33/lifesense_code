@@ -48,27 +48,10 @@ void get_hardware_verion(char *data)
 uint32_t usr_wechat_send_data_evt(void *data)
 {
 	uint32_t error;
-	uint8_t UploadInfoValue[220],UploadInfoLen,length;
-	
-	WeChatPackHeader struWeChatPackHead;
-	SendDataRequest_t	 SendDataRequest;
-	uint8_t 	out_len,*pInData,*pOutData;
 	uint8_t data_len=0;
 	uint8_t i,ucBUF[35];
 	uint32_t crc32_check;
 
-	if(ucBUF[ 0 ])
-	{
-		//此处没有任何操作，只是为了避免编译警告#550-D:variable "ucBUF" was set but never used
-	}
-	
-	struWeChatPackHead.ucMagicNumber= WECHAT_PACK_HEAD_MAGICNUM;       //包头的magic number，这个值是固定的
-	struWeChatPackHead.ucVersion	= WECHAT_PACK_HEAD_VERSIOM;//包头的versionr，这个值是固定的	
-	struWeChatPackHead.usLength = 0;
-	struWeChatPackHead.usCmdID = WECHAT_CMDID_REQ_UTC;
-	struWeChatPackHead.usTxDataPackSequence = usTxWeChatPackSeq++;//0x0003;
-
-	SendDataRequest.BaseRequest =0x00;
 	i=0;
 	ucBUF[i++] = COMMAND_VERSION;	//	命令字版本
 	data_len++;
@@ -132,32 +115,8 @@ uint32_t usr_wechat_send_data_evt(void *data)
 	data_len++;
 	ucBUF[i++] = (uint8_t)crc32_check;
 	data_len++;
-
-	SendDataRequest.Data = ucBUF;
-
-	pInData = &SendDataRequest.BaseRequest;
-	pOutData = ucDataAfterPack;
-	out_len=PackDataType(DATA_BASE_REQUEST_FIELD, Length_delimit, pInData, DATA_BASE_REQUEST_LENGTH, pOutData);
-	pOutData += out_len;
-	length = out_len;
-
-	pInData = SendDataRequest.Data;
-	out_len=PackDataType(DATA_DATA_FIELD, Length_delimit, pInData, data_len, pOutData);
-
-	length += out_len;
-
-	struWeChatPackHead.usLength = length + WECHAT_PACKET_HEAD_LENGTH;
-	memset(UploadInfoValue, 0, sizeof(UploadInfoValue));
-	UploadInfoLen = WechatPacketHead(struWeChatPackHead, ucDataAfterPack, UploadInfoValue);
 	
-	
-	QPRINTF("usr wechat send data....\r\n");
-
-	error = app_send_data(UploadInfoValue,UploadInfoLen);
-	QPRINTF("error = %d\r\n",error);
-	for(uint8_t i=0;i<UploadInfoLen;i++)
-		QPRINTF("%02x,",UploadInfoValue[i]);
-	QPRINTF("\r\n");
+	usr_send_data(ucBUF,data_len);
 
 	return error;
 }

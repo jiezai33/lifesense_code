@@ -3,20 +3,6 @@
 
 #include <stdint.h>
 
-
-typedef struct
-{
-    uint16_t usTxDataPackSeq;
-    uint8_t  usTxDataFrameSeq;
-    uint8_t  usLength;
-    uint8_t  usCmdID;
-    uint8_t  usTxDataType;
-} AppPackHeader;
-
-
-
-
-
 typedef struct
 {
     uint8_t  BaseRequest;

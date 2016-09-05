@@ -835,7 +835,7 @@ int main(void)
 #if DEBUG_TYPE == DEBUG_UART_TYPE
     debug_init();
 	QPRINTF("UART init...\r\n");
-#elif DEBUG_TYPE == DEBUG_UART_TYPE
+#elif DEBUG_TYPE == DEBUG_RTT_TYPE
     ret_code_t errCode = NRF_LOG_INIT();
     APP_ERROR_CHECK(errCode);
 	QPRINTF("RTT init...\r\n");
@@ -870,9 +870,6 @@ int main(void)
 		usrdesign_send_data();	
 		
         power_manage();
-
-		
-		
     }
 
 }

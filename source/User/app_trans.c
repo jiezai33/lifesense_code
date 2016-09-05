@@ -101,6 +101,8 @@ void app_trans_receive(uint8_t *data,uint8_t length)
 
 					if(*(pData+6) == 1)//phone == ios
 						sys_start_pair_mode();
+
+					g_trans_evt_hander.bit.wechat_send_data_bit_3 = 1; 
 				}
 				else
 				{

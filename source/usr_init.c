@@ -36,7 +36,7 @@ uint32_t usr_wechat_init_evt(void *data)
     struWeChatPackHead.usLength = length + WECHAT_PACKET_HEAD_LENGTH;//整包命令的长度，包体+包头
     	
     memset(UploadInfoValue, 0, sizeof(UploadInfoValue));
-    UploadInfoLen = WechatPacketHead(struWeChatPackHead, ucDataAfterPack, UploadInfoValue);//组包第一帧数据，并返回第一帧的长度
+    UploadInfoLen = app_add_wechat_head(struWeChatPackHead, ucDataAfterPack, UploadInfoValue);//组包第一帧数据，并返回第一帧的长度
 
 	QPRINTF("usr wechat init....\r\n");
 

@@ -10,72 +10,9 @@
 #define COMMAND_VERSION                       0xAA
 #define VERSION_NUM                           0x01
 
-static uint8_t app_pack_data(uint8_t* pInData, uint8_t Unlen, uint8_t* pOutData)
-{
-    memcpy(pOutData,pInData,Unlen);
-    return  Unlen;
-}
-
-static uint8_t app_pack_head(AppPackHeader struAppPackHead, uint8_t *pInData,uint8_t *pOutData,uint8_t bdata)
-{
-    uint8_t crclen;
-    uint16_t i,j,index = 0;
-    uint8_t temp_bufer[220];
-    uint32_t crc = 0;
-    uint8_t *p_pInData;
-
-    p_pInData  = pInData;
-
-    temp_bufer[index++] = ((struAppPackHead.usTxDataPackSeq>> 8)|0x80);
-    temp_bufer[index++] = struAppPackHead.usTxDataPackSeq;
-
-    if(bdata)
-    {
-        crclen = 0;
-        temp_bufer[index++] = struAppPackHead.usLength;
-
-    }
-    else
-    {
-        crclen = 4;
-        temp_bufer[index++] = struAppPackHead.usLength + crclen; //加上CRC长度4
-        crc = crc32(p_pInData,struAppPackHead.usLength);
-    }
-
-    for(i=0,j=0; i<struAppPackHead.usLength+crclen; i++) //加帧序号
-    {
-        if(i==0)
-        {
-            temp_bufer[index++] = struAppPackHead.usTxDataFrameSeq++;
-        }
-        else if(i==16)
-        {
-            temp_bufer[index++] = struAppPackHead.usTxDataFrameSeq++;
-        }
-        else if((i-16)%19==0)
-        {
-            temp_bufer[index++] = struAppPackHead.usTxDataFrameSeq++;
-        }
-
-        if(i<struAppPackHead.usLength)
-        {
-            temp_bufer[index++] = *p_pInData++;
-        }
-        else
-        {
-            temp_bufer[index++]=(uint8_t)(crc>>((3-j)*8));
-            j++;
-        }
-    }
-
-    memcpy(pInData,temp_bufer,index); // 更新ucDataAfterPack
-
-    return  index;
-}
-
 uint32_t usr_lifesense_login_evt(void *data)
 {
-	AppPackHeader	 struAppPackHead;
+	trans_header_st	 struAppPackHead;
 	static uint8_t AppUploadInfoValue[20];
 	uint8_t UploadInfoLen , i =0,out_len,length,*pInData,*pOutData;
 	uint8_t ucDeviceIDandTypeMD5[AUTH_MD5_LENGTH];
@@ -102,7 +39,7 @@ uint32_t usr_lifesense_login_evt(void *data)
     struAppPackHead.usLength = length;
     struAppPackHead.usTxDataFrameSeq= 0x01; //帧序号
     memset(AppUploadInfoValue, 0, sizeof(AppUploadInfoValue));
-    UploadInfoLen = app_pack_head(struAppPackHead, ucDataAfterPack, AppUploadInfoValue, 0);
+    UploadInfoLen = app_add_pack_head(struAppPackHead, ucDataAfterPack,ucDataAfterPack, 0);
 	
 	QPRINTF("usr lifesense login....\r\n");
 	error = app_send_data(ucDataAfterPack,UploadInfoLen);
@@ -165,7 +102,7 @@ uint32_t usr_wechat_login_evt(void *data)
 	
 	struWeChatPackHead.usLength = length + WECHAT_PACKET_HEAD_LENGTH;
 	memset(UploadInfoValue, 0, sizeof(UploadInfoValue));
-	UploadInfoLen = WechatPacketHead(struWeChatPackHead, ucDataAfterPack,UploadInfoValue);	
+	UploadInfoLen = app_add_wechat_head(struWeChatPackHead, ucDataAfterPack,UploadInfoValue);	
 	
 	QPRINTF("usr wechat login....\r\n");
 
