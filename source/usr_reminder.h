@@ -6,7 +6,7 @@
 
 #define REMAINDER_GROUP_COUNT	(3)
 
-#define TITLE_DATA_SIZE			(32)
+#define TITLE_DATA_SIZE			(34)
 #define MESSAGE_DATA_SIZE		(100)
 
 typedef enum
@@ -100,12 +100,51 @@ message:	title_data:"ºÅÂë"or"ĞÕÃû"		message_data:"ÄÚÈİ"
 wecaht:		title_data:"êÇ³Æ"				message_data:"ÄÚÈİ"
 
 **********************************************************/
+
+/*****************************************************************************
+ * ? ? ? 	: 	find_mobilephone_no
+ * ???? 	: 
+ * ???? 	: 	uint8_t *in	:????
+ 					uint16_t in_len	:??????
+ 					uint8_t *out	:????
+ 					uint16_t *out_len:??????
+ * ???? 	: 
+ * ? ? ? 	: 	0:??????
+ 					1:??????
+ * ???? 	: 	?
+ * ?    ? 		: 	?????????????????
+*****************************************************************************/
+uint8_t find_mobilephone_no(uint8_t *in,uint16_t in_len);
+
+
+
+
+/*****************************************************************************
+ * ? ? ? 	: 	wipe_off_specific_sysbol
+ * ???? 	: 
+ * ???? 	: 	uint8_t *in	:????
+ 					uint16_t in_len	:??????
+ 					uint8_t *out	:????
+ 					uint16_t *out_len:??????
+ * ???? 	: 
+ * ? ? ? 	: 	0:????
+ * ???? 	: 	?
+ * ?    ? 		: 	??????????????
+*****************************************************************************/
+uint8_t wipe_off_specific_sysbol(uint8_t *in,uint16_t in_len, uint8_t *out,uint16_t *out_len);
+
+
+
+
+void set_remainder_index(uint8_t index);
+
+uint8_t get_remainder_index(void);
+
 remainder_head_st* get_current_call_st(void);
 remainder_body_st* get_current_message_st(void);
 
 void set_remainder_info(uint8_t phone_type,
 						uint8_t remaind_type,
-						uint8_t count,
 						uint32_t time,
 						
 						uint8_t *title_data,
@@ -116,6 +155,7 @@ remainder_st* get_remainder_info(void);
 uint8_t get_remainder_message_count(void);
 uint8_t get_remainder_wechat_count(void);
 void clear_all_remainder_info(void);
+void clear_reminder_count(void);
 void remaind_do(void);
 
 #endif

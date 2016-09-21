@@ -1,3 +1,4 @@
+
 /* Copyright (c) 2012 Nordic Semiconductor. All Rights Reserved.
  *
  * The information contained herein is property of Nordic Semiconductor ASA.
@@ -60,6 +61,7 @@
 #include "ble_dis.h"
 #include "usr_design.h"
 #include "usr_device.h"
+#include "time.h"
 
 #if BUTTONS_NUMBER < 2
 #error "Not enough resources on board"
@@ -78,7 +80,7 @@
 #define ADV_INTERVAL_FAST_PERIOD        30                                          /**< The duration of the fast advertising period (in seconds). */
 
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
-#define APP_TIMER_OP_QUEUE_SIZE         6//5                                           /**< Size of timer operation queues. */
+#define APP_TIMER_OP_QUEUE_SIZE         7                                           /**< Size of timer operation queues. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(500, UNIT_1_25_MS)            /**< Minimum acceptable connection interval (0.5 seconds). */
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(1000, UNIT_1_25_MS)           /**< Maximum acceptable connection interval (1 second). */
@@ -93,6 +95,7 @@
 
 #define SECURITY_REQUEST_DELAY          APP_TIMER_TICKS(1500, APP_TIMER_PRESCALER)  /**< Delay after connection until security request is sent, if necessary (ticks). */
 #define FIND_ANCS_SERVER_REQUEST_DELAY  APP_TIMER_TICKS(1500, APP_TIMER_PRESCALER)  /**< Delay after connection until security request is sent, if necessary (ticks). */
+#define ONE_SECOND_INTERVAL         	APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)
 
 #define SEC_PARAM_BOND                  1                                           /**< Perform bonding. */
 #define SEC_PARAM_MITM                  0                                           /**< Man In The Middle protection not required. */
@@ -119,7 +122,7 @@ static dm_handle_t               m_peer_handle;                            /**< 
 static ble_gap_sec_params_t      m_sec_param;                              /**< Security parameter for use in security requests. */
 APP_TIMER_DEF(m_sec_req_timer_id);                                         /**< Security request timer. The timer lets us start pairing request if one does not arrive from the Central. */
 APP_TIMER_DEF(m_ancs_server_find_timer_id);                                         /**< Security request timer. The timer lets us start pairing request if one does not arrive from the Central. */
-
+APP_TIMER_DEF(m_time_timer_id);
 extern ble_ancs_c_evt_notif_t m_notification_latest;                       /**< Local copy to keep track of the newest arriving notifications. */
 
 
@@ -197,7 +200,11 @@ static void timers_init(void)
     err_code = app_timer_create(&m_ancs_server_find_timer_id,
                                 APP_TIMER_MODE_SINGLE_SHOT,
                                 ancs_find_timeout_handler);
-	
+
+	err_code = app_timer_create(&m_time_timer_id, APP_TIMER_MODE_REPEATED, system_time_tick);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = app_timer_start(m_time_timer_id, ONE_SECOND_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -454,6 +461,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             {
                 m_ios_ancs.conn_handle = BLE_CONN_HANDLE_INVALID;
             }
+			clear_all_remainder_info();
             break;
 
         case BLE_GATTS_EVT_TIMEOUT:
@@ -843,7 +851,8 @@ int main(void)
     timers_init();
     buttons_leds_init(&erase_bonds);
     ble_stack_init();
-	
+
+	system_time_init();
 	device_id_init();
 	motor_init();
     device_manager_init(erase_bonds);
@@ -865,7 +874,6 @@ int main(void)
     {
         app_sched_execute();
 		remaind_do();
-		
 		trans_evt_call_back();
 		usrdesign_send_data();	
 		

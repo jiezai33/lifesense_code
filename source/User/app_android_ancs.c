@@ -1,6 +1,7 @@
 #include "app_android_ancs.h"
 #include "ancs_android_usrdesign.h"
 #include "usr_reminder.h"
+#include "time.h"
 #include "debug.h"
 
 static uint8_t g_retry_count = 0;     //挂断重试次数
@@ -211,8 +212,8 @@ void app_android_ancs_receive_data(uint8_t *data, uint16_t length,uint8_t ucFram
 	ucRchecksum <<= 8;
 	ucRchecksum += *(data + length - 1);												 //解析数据checksum
 
-	//UtcCntRelativeGet(&time);
-
+	time = system_sec_get();
+	
 	if (ucCmdID == 0xC0 && ucCmdType == BLE_ANCS_CATEGORY_ID_INCOMING_CALL) 		  //挂断电话状态回复
 	{
 		if (*pContent == 0x00 && g_retry_count < 3)									  //判断接收到的数据是否正确，不正确需要重发
@@ -226,11 +227,12 @@ void app_android_ancs_receive_data(uint8_t *data, uint16_t length,uint8_t ucFram
 		length -= 4; 																  //命令内容的真实长度澹(去除提示类型+信息类型+校验码共4个字节)
 		if (ucCmdType == BLE_ANCS_EVENT_ID_NOTIFICATION_ADDED)						  //判断是否是新增来电通知
 		{
-			set_remainder_info(ANDROID_TYPE,CALL_REMAIND,1,time,pContent, length,pContent, length);
+			set_remainder_info(ANDROID_TYPE,CALL_REMAIND,time,pContent, length,pContent, length);
 		}
 		else if (ucCmdType == BLE_ANCS_EVENT_ID_NOTIFICATION_REMOVED)				  //来电挂断事件处理
 		{
 			//Android_remaind_stop_process(CALL_REMAIND);
+			QPRINTF("Call is miss\r\n");
 		}
 
 		app_android_ancs_send_reponse(CALL_REMAIND, ucFrameNum, ucCmdID, ucCmdType, 0, ret);//回复APP提醒解析结果
@@ -334,7 +336,6 @@ void app_android_ancs_receive_data(uint8_t *data, uint16_t length,uint8_t ucFram
 				{
 					set_remainder_info(g_reminder_head.phone_type,
 						g_reminder_head.remaind_type,
-						1,
 						g_reminder_head.time,						
 						g_reminder_head.title_data,
 						g_reminder_head.title_length,

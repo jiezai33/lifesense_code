@@ -4,6 +4,7 @@
 #include "debug.h"
 #include "channel_select.h"
 #include "transfer_usrdesign.h"
+#include "time.h"
 
 extern void sys_start_pair_mode(void);
 
@@ -81,6 +82,7 @@ uint32_t app_transfer_send_data(uint8_t *data,uint16_t length,trans_channel_enum
 void app_trans_receive(uint8_t *data,uint8_t length)
 {
 	uint8_t cmd = 0,*pData,data_len;
+	uint32_t time = 0;
 	if(*data == CMD_VERSION_0 && *(data+1) == CMD_VERSION_1)
 	{
 		cmd = *(data+2);
@@ -99,6 +101,13 @@ void app_trans_receive(uint8_t *data,uint8_t length)
 					QPRINTF("phone type:%02x\r\n",*(pData+6));
 					g_communication_statue.transfer_statue = DATA_STATUE;
 
+					system_timezone_set(*(pData+5));
+					time |= (uint32_t)(*(pData+1)<<24);
+					time |= (uint32_t)(*(pData+2)<<16);
+					time |= (uint32_t)(*(pData+3)<<8);
+					time |= (uint32_t)(*(pData+4));
+					system_sec_set(time);
+					
 					if(*(pData+6) == 1)//phone == ios
 						sys_start_pair_mode();
 

@@ -26,11 +26,17 @@
 #include "nrf_delay.h"
 #include "debug.h"
 #include "ancs_android_usrdesign.h"
+#include "time.h"
 
 #define WECHAT_MSG              	"com.tencent.xin"
 #define MOBILE_SMS              	"com.apple.MobileSMS"
 #define MOBILE_PHONE            	"com.apple.mobilephone"
 #define QQ_MSG						"com.tencent.mqq"
+
+#define WECHAT_DIFF  ":"
+char wechat_chn[] = {0xE5,0xBE,0xAE,0xE4,0xBF,0xA1}; //??
+char wechat_eng[] = {0x57,0x65,0x43,0x68,0x61,0x74}; //WeChat
+const uint8_t specified_wx_tital[] = {0xE6, 0x82, 0xA8, 0xe6, 0x9c, 0x89, 0xe6, 0x96, 0xb0, 0xe4, 0xbf, 0xa1, 0xe6, 0x81, 0xaf};
 
 static remind_info_analysis_st	usr_remind;
 #if DATA_TYPE == DATA_POINTER_TYPE
@@ -320,72 +326,64 @@ static void parse_notif(const ble_ancs_c_t * p_ancs,
    	// 2016-03-06 陈长升 判断通知类型是否来电通知
 		if(ancs_evt.notif.category_id == BLE_ANCS_CATEGORY_ID_INCOMING_CALL)
 		{
-				// 2016-03-06 陈长升 判断通知是否增加的通知
-				if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_ADDED)
+			// 2016-03-06 陈长升 判断通知是否增加的通知
+			if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_ADDED)
+			{
+				//在mainmode下才通知来电
+				for(uint8_t i = 0; i < BLE_ANCS_NB_OF_ATTRS; i ++)
 				{
-						//在mainmode下才通知来电
-						//if((FacPara.Mode == MainMode) &&(Flag.Charge == 0) && (struIncomingCallMotorSet.ucEnable == TRUE))
-						{
-								for(uint8_t i = 0; i < BLE_ANCS_NB_OF_ATTRS; i ++)
-								{
-										m_ios_ancs.ancs_attr_list[i].get = false;
-								}
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].get = true;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_id = BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_len = ANCS_DATA_SIZE;  //此处不能用其他值，会影响到attr_data_parse（）解析
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].get = true;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_id = BLE_ANCS_NOTIF_ATTR_ID_TITLE;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_len = ANCS_DATA_SIZE;
-								err_code = ble_ancs_c_request_attrs(&m_ios_ancs, &ancs_evt.notif);
+						m_ios_ancs.ancs_attr_list[i].get = false;
+				}
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].get = true;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_id = BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_len = ANCS_DATA_SIZE;  //此处不能用其他值，会影响到attr_data_parse（）解析
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].get = true;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_id = BLE_ANCS_NOTIF_ATTR_ID_TITLE;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_len = ANCS_DATA_SIZE;
+				err_code = ble_ancs_c_request_attrs(&m_ios_ancs, &ancs_evt.notif);
 
-								APP_ERROR_CHECK(err_code);
-								//此处要确认下uid的大小端是否正确
-								//memcpy(ucAncsCurrentUid, (uint8_t *)&ancs_evt.notif.notif_uid, 4);// 2016-03-06 陈长升 这里4使用sizeof会好一些
-						}
-				}
-				// 2016-03-06 陈长升 判断通知是否删除的通知
-				else if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_REMOVED)
-				{
-						//关闭马达振动，但不关显示，2015032503
-	
-				}
+				APP_ERROR_CHECK(err_code);
+				//此处要确认下uid的大小端是否正确
+				//memcpy(ucAncsCurrentUid, (uint8_t *)&ancs_evt.notif.notif_uid, 4);// 2016-03-06 陈长升 这里4使用sizeof会好一些
+			}
+			// 2016-03-06 陈长升 判断通知是否删除的通知
+			else if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_REMOVED)
+			{
+				//关闭马达振动，但不关显示，2015032503
+			}
 		}
 		// 2016-03-06 陈长升 判断通知是否社交信息，如微信、短信 
-		else if(ancs_evt.notif.category_id == BLE_ANCS_CATEGORY_ID_SOCIAL)
+		else if(ancs_evt.notif.category_id != BLE_ANCS_CATEGORY_ID_MISSED_CALL)
 		{
-				// 2016-03-06 陈长升 判断是否新增加的通知
-				if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_ADDED)
+			// 2016-03-06 陈长升 判断是否新增加的通知
+			if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_ADDED)
+			{
+				// 过时的消息不再获取
+				if(ancs_evt.notif.evt_flags.pre_existing)
+					return;
+
+				for(uint8_t i = 0; i < BLE_ANCS_NB_OF_ATTRS; i ++)
 				{
-						//在mainmode下才通知短信和微信
-						//if((FacPara.Mode == MainMode) &&(Flag.Charge == 0) && (struMessageMotorSet.ucEnable == TRUE))
-						{
-								// 过时的消息不再获取
-								if(ancs_evt.notif.evt_flags.pre_existing)
-											return;
-
-								for(uint8_t i = 0; i < BLE_ANCS_NB_OF_ATTRS; i ++)
-								{
-										m_ios_ancs.ancs_attr_list[i].get = false;
-								}
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].get = true;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_id = BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_len = ANCS_DATA_SIZE;//此处不能用其他值，会影响到attr_data_parse（）解析
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].get = true;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_id = BLE_ANCS_NOTIF_ATTR_ID_TITLE;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_len = ANCS_DATA_SIZE;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].get = true;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].attr_id = BLE_ANCS_NOTIF_ATTR_ID_MESSAGE;
-								m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].attr_len = ANCS_DATA_SIZE;
-								err_code = ble_ancs_c_request_attrs(&m_ios_ancs, &ancs_evt.notif);
-
-								APP_ERROR_CHECK(err_code);
-						}
+					m_ios_ancs.ancs_attr_list[i].get = false;
 				}
-				// 2016-03-06 陈长升 判断通知是否删除的通知
-				else if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_REMOVED)
-				{
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].get = true;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_id = BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].attr_len = ANCS_DATA_SIZE;//此处不能用其他值，会影响到attr_data_parse（）解析
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].get = true;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_id = BLE_ANCS_NOTIF_ATTR_ID_TITLE;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_TITLE].attr_len = ANCS_DATA_SIZE;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].get = true;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].attr_id = BLE_ANCS_NOTIF_ATTR_ID_MESSAGE;
+				m_ios_ancs.ancs_attr_list[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].attr_len = ANCS_DATA_SIZE;
+				err_code = ble_ancs_c_request_attrs(&m_ios_ancs, &ancs_evt.notif);
 
-				}
+				APP_ERROR_CHECK(err_code);
+			}
+			// 2016-03-06 陈长升 判断通知是否删除的通知
+			else if(ancs_evt.notif.evt_id == BLE_ANCS_EVENT_ID_NOTIFICATION_REMOVED)
+			{
+
+			}
 		}
 		else
 		{
@@ -438,6 +436,13 @@ static void parse_get_notif_attrs_response(ble_ancs_c_t  * p_ancs,
     int i;
 	uint32_t time;
 	uint8_t remaind_type = REMAIND_MAX;
+	static uint32_t preTime;
+
+	uint8_t title_data[TITLE_DATA_SIZE],title_length;
+	uint8_t *message_data,message_length;
+	uint16_t heap_len,messs_len;
+	char *str = NULL;
+	remainder_st *rSt = get_remainder_info();
 
 	//一条完整的通知包括1byte command ID + 4bytes UID + 1 byte attribute ID + 2 byte attribute Len + attribute (attribute Len bytes)
     for(i = 0; i < hvx_data_len; i++)
@@ -516,7 +521,8 @@ static void parse_get_notif_attrs_response(ble_ancs_c_t  * p_ancs,
                     event.attr.attr_len = buff_idx;
                     event.evt_type = BLE_ANCS_C_EVT_NOTIF_ATTRIBUTE;
                     p_ancs->evt_handler(&event);
-
+					
+					time = system_sec_get(); 
                     if(event.attr.attr_id == BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER)
                     {
 						p_ancs->parse_state = ATTRIBUTE_ID;
@@ -530,8 +536,7 @@ static void parse_get_notif_attrs_response(ble_ancs_c_t  * p_ancs,
 					    }
 
                         p_ancs->parse_state = COMMAND_ID;
-						//UtcCntRelativeGet(&time);
-                		set_remainder_info(IOS_TYPE,CALL_REMAIND,1,time,
+                		set_remainder_info(IOS_TYPE,CALL_REMAIND,time,
 							(uint8_t*)&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_TITLE].addr]),
 							usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_TITLE].size,
 							(uint8_t*)&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].addr]),
@@ -541,22 +546,81 @@ static void parse_get_notif_attrs_response(ble_ancs_c_t  * p_ancs,
                     {
                         p_ancs->parse_state = COMMAND_ID;
 
-						//if(struSysTempFlag.Sys_TempFlagBit.bGetIncomingCallTitle == false)  // 如果没有来电，可以置起信息提醒和对得到提醒信息
-                        {
-							//UtcCntRelativeGet(&time);
-							if(memcmp(&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].addr]),MOBILE_SMS,sizeof(MOBILE_SMS))==0)
-    							remaind_type = MESSAGE_REMAIND;
-						    else if(memcmp(&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].addr]),WECHAT_MSG, (sizeof(WECHAT_MSG)))==0)
-						    	remaind_type = WECHAT_REMAIND;
-							else if(memcmp(&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].addr]),QQ_MSG, (sizeof(QQ_MSG)))==0)
-    							remaind_type = QQ_REMAIND;
+						if(memcmp(&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].addr]),MOBILE_SMS,sizeof(MOBILE_SMS))==0)
+							remaind_type = MESSAGE_REMAIND;
+					    else if(memcmp(&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].addr]),WECHAT_MSG, (sizeof(WECHAT_MSG)))==0)
+					    	remaind_type = WECHAT_REMAIND;
+						else if(memcmp(&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER].addr]),QQ_MSG, (sizeof(QQ_MSG)))==0)
+							remaind_type = QQ_REMAIND;
+						else
+							remaind_type = REMAIND_MAX;
 
-                			set_remainder_info(IOS_TYPE,remaind_type,1,time,
-								(uint8_t*)&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_TITLE].addr]),
-							usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_TITLE].size,
-								(uint8_t*)&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].addr]),
-								usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].size);
-						}
+						if(remaind_type == MESSAGE_REMAIND || remaind_type == WECHAT_REMAIND)
+						{
+							if(time - preTime > 2)
+							{							
+								rSt->message_count = 0;
+								rSt->wechat_count = 0;
+							}
+							preTime = time;
+
+							if(remaind_type == MESSAGE_REMAIND)
+								rSt->message_count++;
+							else if(remaind_type == WECHAT_REMAIND)
+								rSt->wechat_count++;
+						
+							title_length = usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_TITLE].size;
+							if(title_length > TITLE_DATA_SIZE)
+								title_length = TITLE_DATA_SIZE;
+							memcpy(title_data, &(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_TITLE].addr]), title_length);
+							
+							message_data = (uint8_t *)&(usr_remind.data[usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].addr]);
+							message_length = usr_remind.id[BLE_ANCS_NOTIF_ATTR_ID_MESSAGE].size;
+							if(message_length > MESSAGE_DATA_SIZE)
+								message_length = MESSAGE_DATA_SIZE;
+
+							if(remaind_type == WECHAT_REMAIND)
+							{
+								str = strstr((char*)message_data, WECHAT_DIFF);
+								if(memcmp(title_data, wechat_chn, sizeof(wechat_chn)) == 0
+									|| memcmp(title_data, wechat_eng, sizeof(wechat_eng)) == 0)
+						        {
+									if(str == NULL)
+									{
+										heap_len = sizeof(specified_wx_tital);
+										memcpy(title_data, specified_wx_tital, heap_len);
+										title_length = heap_len;
+									}
+									else
+									{
+										heap_len = str - (char*)message_data;
+										if(heap_len >= TITLE_DATA_SIZE)
+											heap_len = (TITLE_DATA_SIZE - 1);
+										memcpy(title_data,message_data , heap_len);
+										title_data[heap_len] = '\0';
+										title_length = heap_len;
+									}
+						        }
+
+								if(str != NULL)
+								{
+									heap_len = (str - (char*)message_data)+1;
+									messs_len = message_length - heap_len;
+									for(i=0;i<messs_len;i++)
+									{
+										message_data[i] = message_data[i+heap_len];
+									}
+									message_data[i] = '\0';
+									message_length = messs_len;
+								}
+							}
+							
+							set_remainder_info(IOS_TYPE,remaind_type,time,
+								title_data,
+								title_length,
+								message_data,
+								message_length);
+						}		
                     }
                 }
                 break;
@@ -963,7 +1027,7 @@ static void evt_notif_attribute(ble_ancs_c_evt_notif_attr_t *p_attr)
 		if(attr_id == BLE_ANCS_NOTIF_ATTR_ID_APP_IDENTIFIER)
 		{
 			memset(&usr_remind, 0, sizeof(usr_remind));
-			//UtcCntRelativeGet(&usr_remind.time);
+			usr_remind.time = system_sec_get();
 			#if DATA_TYPE == DATA_POINTER_TYPE
 			memset(&g_ancs_common_rx_buffer[ANCS_RX_START_ADDR], 0, ANCS_RX_START_ADDR);
 			#endif

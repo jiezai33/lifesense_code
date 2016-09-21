@@ -16,6 +16,8 @@
 #include "channel_select.h"
 #include "wechat_usrdesign.h"
 
+extern void sys_start_pair_mode(void);
+
 void app_wechat_connection(void)
 {
 	QPRINTF("app_wechat_connection\r\n");
