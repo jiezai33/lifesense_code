@@ -91,27 +91,11 @@
 #define BLE_ANCS_NB_OF_ATTRS                8   /**< Number of iOS notification attributes: AppIdentifier, Title, Subtitle, Message, MessageSize, Date, PositiveActionLabel, NegativeActionLabel. */
 #define BLE_ANCS_NB_OF_EVT_ID               3   /**< Number of iOS notification events: Added, Modified, Removed.*/
 
-/** @brief Length of the iOS notification data.
- *
- * @details 8 bytes:
- * Event ID |Event flags |Category ID |Category count|Notification UID
- * ---------|------------|------------|--------------|----------------
- * 1 byte   | 1 byte     | 1 byte     | 1 byte       | 4 bytes        
- */
-#define BLE_ANCS_NOTIFICATION_DATA_LENGTH   8
 
 #define ANCS_UUID_SERVICE                   0xF431  /**< 16-bit service UUID for the Apple Notification Center Service. */
 #define ANCS_UUID_CHAR_CONTROL_POINT        0xD8F3  /**< 16-bit control point UUID. */
 #define ANCS_UUID_CHAR_DATA_SOURCE          0xC6E9  /**< 16-bit data source UUID. */
 #define ANCS_UUID_CHAR_NOTIFICATION_SOURCE  0x120D  /**< 16-bit notification source UUID. */
-
-#define BLE_ANCS_EVENT_FLAG_SILENT          0       /**< 0b.......1 Silent: First (LSB) bit is set. All flags can be active at the same time.*/
-#define BLE_ANCS_EVENT_FLAG_IMPORTANT       1       /**< 0b......1. Important: Second (LSB) bit is set. All flags can be active at the same time.*/
-#define BLE_ANCS_EVENT_FLAG_PREEXISTING     2       /**< 0b.....1.. Pre-existing: Third (LSB) bit is set. All flags can be active at the same time.*/
-#define BLE_ANCS_EVENT_FLAG_POSITIVE_ACTION 3       /**< 0b....1... Positive action: Fourth (LSB) bit is set. All flags can be active at the same time.*/
-#define BLE_ANCS_EVENT_FLAG_NEGATIVE_ACTION 4       /**< 0b...1.... Negative action: Fifth (LSB) bit is set. All flags can be active at the same time. */
-
-
 
 /**@brief Event types that are passed from client to application on an event. */
 typedef enum
@@ -287,26 +271,7 @@ typedef struct
     ble_srv_error_handler_t  error_handler;  /**< Function to be called in case of an error. */
 } ble_ancs_c_init_t;
 
-#define IOS_ANCS_RECEIVE_DATA_START_ADDR	(0)
-#define IOS_ANCS_RECEIVE_DATA_SIZE			ANCS_DATA_SIZE
-typedef struct
-{
-	uint8_t addr;
-	uint8_t size;
-}data_st;
 
-typedef struct 
-{
-	uint32_t time;
-	data_st id[BLE_ANCS_NOTIF_ATTR_ID_MAX];
-	uint8_t use_index;
-	
-	#if DATA_TYPE == DATA_BUFFER_TYPE
-	char data[ANCS_DATA_SIZE];
-	#elif DATA_TYPE == DATA_POINTER_TYPE
-	char *data;
-	#endif
-}remind_info_analysis_st;
 
 
 

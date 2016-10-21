@@ -114,7 +114,8 @@
 
 #define MANUFACTURER_NAME          "lifesense"                      /**< Manufacturer. Will be passed to Device Information Service. */
 
-ble_ancs_c_t              		m_ios_ancs;                                 /**< Structure used to identify the Apple Notification Service Client. */
+extern ble_ancs_c_t              m_ios_ancs;
+
 static ble_db_discovery_t        m_ble_db_discovery;                       /**< Structure used to identify the DB Discovery module. */
 
 static dm_application_instance_t m_app_handle;                             /**< Application identifier allocated by the Device Manager. */
@@ -123,7 +124,6 @@ static ble_gap_sec_params_t      m_sec_param;                              /**< 
 APP_TIMER_DEF(m_sec_req_timer_id);                                         /**< Security request timer. The timer lets us start pairing request if one does not arrive from the Central. */
 APP_TIMER_DEF(m_ancs_server_find_timer_id);                                         /**< Security request timer. The timer lets us start pairing request if one does not arrive from the Central. */
 APP_TIMER_DEF(m_time_timer_id);
-extern ble_ancs_c_evt_notif_t m_notification_latest;                       /**< Local copy to keep track of the newest arriving notifications. */
 
 
 uint16_t g_connect_handle;
@@ -457,10 +457,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
 
         case BLE_GAP_EVT_DISCONNECTED:
             QPRINTF("Disconnected.\r\n");
-            if (p_ble_evt->evt.gap_evt.conn_handle == m_ios_ancs.conn_handle)
-            {
-                m_ios_ancs.conn_handle = BLE_CONN_HANDLE_INVALID;
-            }
+
 			clear_all_remainder_info();
             break;
 
@@ -504,12 +501,6 @@ static void bsp_event_handler(bsp_event_t event)
             break;
 
         case BSP_EVENT_DISCONNECT:
-            err_code = sd_ble_gap_disconnect(m_ios_ancs.conn_handle,
-                                             BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-            if (err_code != NRF_ERROR_INVALID_STATE)
-            {
-                APP_ERROR_CHECK(err_code);
-            }
             break;
 
         case BSP_EVENT_WHITELIST_OFF:
@@ -521,8 +512,6 @@ static void bsp_event_handler(bsp_event_t event)
             break;
 
         case BSP_EVENT_KEY_1:
-            err_code = ble_ancs_c_request_attrs(&m_ios_ancs, &m_notification_latest);
-            APP_ERROR_CHECK(err_code);
             break;
 
         default:

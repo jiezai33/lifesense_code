@@ -367,8 +367,8 @@ void remaind_do(void)
 			QPRINTF( "remaind_flg=%d\r\n",	g_remainder_st.body_st[index].head.remaind_flg);
 			QPRINTF( "title_length=%d\r\n",	g_remainder_st.body_st[index].head.title_length);
 			QPRINTF( "title_data:%s\r\n",	g_remainder_st.body_st[index].head.title_data);
-			QPRINTF( "message_length=%d\r\n\r\n",g_remainder_st.body_st[index].message_length);
-			QPRINTF( "message_data:%s\r\n\r\n",g_remainder_st.body_st[index].message_data);
+			QPRINTF( "message_length=%d\r\n",g_remainder_st.body_st[index].message_length);
+			QPRINTF( "message_data:%s\r\n",g_remainder_st.body_st[index].message_data);
 
 			for(i=0;i<g_remainder_st.body_st[index].message_length;i++)
 			{

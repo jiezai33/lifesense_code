@@ -721,6 +721,11 @@
               <FileType>1</FileType>
               <FilePath>..\source\ble_wechat\wechat_usrdesign.c</FilePath>
             </File>
+            <File>
+              <FileName>ancs_ios_usrdesign.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\ble_ancs_ios\ancs_ios_usrdesign.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

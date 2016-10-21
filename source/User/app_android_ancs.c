@@ -1,7 +1,9 @@
 #include "app_android_ancs.h"
 #include "ancs_android_usrdesign.h"
+#include "ancs_ios_usrdesign.h"
 #include "usr_reminder.h"
 #include "time.h"
+
 #include "debug.h"
 
 static uint8_t g_retry_count = 0;     //¹Ò¶ÏÖØÊÔ´ÎÊı
