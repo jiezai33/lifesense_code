@@ -373,7 +373,7 @@
               <MiscControls></MiscControls>
               <Define>BLE_STACK_SUPPORT_REQD BOARD_PCA10040 NRF52_PAN_12 NRF52_PAN_15 NRF52_PAN_20 NRF52_PAN_30 NRF52_PAN_31 NRF52_PAN_36 NRF52_PAN_51 NRF52_PAN_53 NRF52_PAN_54 NRF52_PAN_55 NRF52_PAN_58 NRF52_PAN_62 NRF52_PAN_63 NRF52_PAN_64 CONFIG_GPIO_AS_PINRESET S132 NRF_LOG_USES_RTT=1 NRF52 SOFTDEVICE_PRESENT SWI_DISABLE0</Define>
               <Undefine></Undefine>
-              <IncludePath>..\source\config;..\components\ble\ble_advertising;..\components\ble\ble_db_discovery;..\components\ble\common;..\components\ble\device_manager;..\components\drivers_nrf\common;..\components\drivers_nrf\config;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\pstorage;..\components\drivers_nrf\uart;..\components\libraries\button;..\components\libraries\experimental_section_vars;..\components\libraries\fifo;..\components\libraries\fstorage;..\components\libraries\fstorage\config;..\components\libraries\scheduler;..\components\libraries\timer;..\components\libraries\trace;..\components\libraries\uart;..\components\libraries\util;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s132\headers;..\components\softdevice\s132\headers\nrf52;..\components\toolchain;..\source\bsp;..\external\segger_rtt;..\source;..\source\ble_dis;..\source\User;..\source\ble_ancs_android;..\source\ble_ancs_ios;..\source\ble_ota;..\source\ble_trans;..\source\ble_wechat;..\source\common</IncludePath>
+              <IncludePath>..\source\config;..\components\ble\ble_advertising;..\components\ble\ble_db_discovery;..\components\ble\common;..\components\ble\device_manager;..\components\drivers_nrf\common;..\components\drivers_nrf\config;..\components\drivers_nrf\delay;..\components\drivers_nrf\gpiote;..\components\drivers_nrf\hal;..\components\drivers_nrf\pstorage;..\components\drivers_nrf\uart;..\components\libraries\button;..\components\libraries\experimental_section_vars;..\components\libraries\fifo;..\components\libraries\fstorage;..\components\libraries\fstorage\config;..\components\libraries\scheduler;..\components\libraries\timer;..\components\libraries\trace;..\components\libraries\uart;..\components\libraries\util;..\components\softdevice\common\softdevice_handler;..\components\softdevice\s132\headers;..\components\softdevice\s132\headers\nrf52;..\components\toolchain;..\source\bsp;..\external\segger_rtt;..\source;..\source\ble_dis;..\source\User;..\source\ble_ancs_android;..\source\ble_ancs_ios;..\source\ble_ota;..\source\ble_trans;..\source\ble_wechat;..\source\common;..\components\drivers_nrf\spi_master;..\components\drivers_nrf\spi_slave</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -470,6 +470,11 @@
               <FileName>protoBuf.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\source\common\protoBuf.c</FilePath>
+            </File>
+            <File>
+              <FileName>transfer_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\source\transfer_driver.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -590,6 +595,11 @@
               <FileName>pstorage.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\components\drivers_nrf\pstorage\pstorage.c</FilePath>
+            </File>
+            <File>
+              <FileName>nrf_drv_spis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\drivers_nrf\spi_slave\nrf_drv_spis.c</FilePath>
             </File>
           </Files>
         </Group>

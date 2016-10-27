@@ -258,12 +258,16 @@ static void spis_state_entry_action_execute(NRF_SPIS_Type * p_spis,
             p_cb->handler(event);
             break;
             
-        case SPIS_XFER_COMPLETED:        
+        case SPIS_XFER_COMPLETED:  
             event.evt_type  = NRF_DRV_SPIS_XFER_DONE;
             event.rx_amount = nrf_spis_rx_amount_get(p_spis);
             event.tx_amount = nrf_spis_tx_amount_get(p_spis);
             APP_ERROR_CHECK_BOOL(p_cb->handler != NULL);
             p_cb->handler(event);
+
+			//kai.ter add
+			p_cb->spi_state = SPIS_BUFFER_RESOURCE_REQUESTED;
+			nrf_spis_task_trigger(p_spis, NRF_SPIS_TASK_ACQUIRE);
             break;
             
         default:
@@ -334,6 +338,60 @@ ret_code_t nrf_drv_spis_buffers_set(nrf_drv_spis_t const * const  p_instance,
     return err_code;
 }
 
+//kai.ter add
+ret_code_t nrf_drv_spis_tx_buffers_set(nrf_drv_spis_t const * const  p_instance,
+                                    const uint8_t * p_tx_buffer,
+                                    uint8_t   tx_buffer_length)
+{
+    spis_cb_t * p_cb = &m_cb[p_instance->instance_id];
+    uint32_t err_code;
+
+    VERIFY_PARAM_NOT_NULL(p_tx_buffer);
+
+    // EasyDMA requires that transfer buffers are placed in Data RAM region;
+    // signal error if they are not.
+    if (p_tx_buffer != NULL && !nrf_drv_is_in_RAM(p_tx_buffer))
+    {
+        return NRF_ERROR_INVALID_ADDR;
+    }
+    
+    p_cb->tx_buffer      = p_tx_buffer;
+    p_cb->tx_buffer_size = tx_buffer_length;
+    err_code             = NRF_SUCCESS;            
+                
+    spis_state_change(p_instance->p_reg, p_cb, SPIS_BUFFER_RESOURCE_REQUESTED);             
+
+    
+    return err_code;
+}
+
+//kai.ter add
+ret_code_t nrf_drv_spis_rx_buffers_set(nrf_drv_spis_t const * const  p_instance,
+                                    uint8_t * p_rx_buffer,
+                                    uint8_t   rx_buffer_length)
+{
+    spis_cb_t * p_cb = &m_cb[p_instance->instance_id];
+    uint32_t err_code;
+
+    VERIFY_PARAM_NOT_NULL(p_rx_buffer);
+
+    // EasyDMA requires that transfer buffers are placed in Data RAM region;
+    // signal error if they are not.
+    if (p_rx_buffer != NULL && !nrf_drv_is_in_RAM(p_rx_buffer))
+    {
+        return NRF_ERROR_INVALID_ADDR;
+    }
+    
+    p_cb->rx_buffer      = p_rx_buffer;
+    p_cb->rx_buffer_size = rx_buffer_length;
+    err_code             = NRF_SUCCESS;            
+                
+    spis_state_change(p_instance->p_reg, p_cb, SPIS_BUFFER_RESOURCE_REQUESTED);             
+
+    
+    return err_code;
+}
+
 static void spis_irq_handler(NRF_SPIS_Type * p_spis, spis_cb_t * p_cb)
 {
     // @note: as multiple events can be pending for processing, the correct event processing order 
@@ -345,7 +403,6 @@ static void spis_irq_handler(NRF_SPIS_Type * p_spis, spis_cb_t * p_cb)
     if (nrf_spis_event_check(p_spis, NRF_SPIS_EVENT_ACQUIRED))
     {
         nrf_spis_event_clear(p_spis, NRF_SPIS_EVENT_ACQUIRED);
-        
         switch (p_cb->spi_state)
         {                
             case SPIS_BUFFER_RESOURCE_REQUESTED:     
@@ -367,7 +424,6 @@ static void spis_irq_handler(NRF_SPIS_Type * p_spis, spis_cb_t * p_cb)
     if (nrf_spis_event_check(p_spis, NRF_SPIS_EVENT_END))
     {
         nrf_spis_event_clear(p_spis, NRF_SPIS_EVENT_END);
-        
         switch (p_cb->spi_state)
         {
             case SPIS_BUFFER_RESOURCE_CONFIGURED:    

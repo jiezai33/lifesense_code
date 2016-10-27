@@ -217,6 +217,15 @@ ret_code_t nrf_drv_spis_buffers_set(nrf_drv_spis_t const * const  p_instance,
                                     uint8_t   tx_buffer_length, 
                                     uint8_t * p_rx_buffer, 
                                     uint8_t   rx_buffer_length);
+//kai.ter add
+ret_code_t nrf_drv_spis_tx_buffers_set(nrf_drv_spis_t const * const  p_instance,
+                                    const uint8_t * p_tx_buffer,
+                                    uint8_t   tx_buffer_length);
+//kai.ter add
+ret_code_t nrf_drv_spis_rx_buffers_set(nrf_drv_spis_t const * const  p_instance,
+                                    uint8_t * p_rx_buffer,
+                                    uint8_t   rx_buffer_length);
+
 
 #endif // SPI_SLAVE_H__
 

@@ -452,12 +452,12 @@ __STATIC_INLINE void nrf_spis_rx_buffer_set(NRF_SPIS_Type * p_spis,
 
 __STATIC_INLINE uint8_t nrf_spis_tx_amount_get(NRF_SPIS_Type const * p_spis)
 {
-    return (uint8_t) p_spis->AMOUNTRX;
+    return (uint8_t) p_spis->AMOUNTTX;
 }
 
 __STATIC_INLINE uint8_t nrf_spis_rx_amount_get(NRF_SPIS_Type const * p_spis)
 {
-    return (uint8_t) p_spis->AMOUNTTX;
+    return (uint8_t) p_spis->AMOUNTRX;
 }
 
 __STATIC_INLINE void nrf_spis_configure(NRF_SPIS_Type * p_spis,

@@ -26,7 +26,6 @@
  *
  * The application must propagate BLE stack events to this module by calling
  * @ref ble_advertising_on_ble_evt() and system events by calling
- * @ref ble_advertising_on_sys_evt().
  *
  */
 
@@ -124,28 +123,6 @@ typedef struct
 #define BLE_ADV_WHITELIST_DISABLED     false
 
 
-/**@brief Function for handling BLE events.
- *
- * @details This function must be called from the BLE stack event dispatcher for
- *          the module to handle BLE events that are relevant for the Advertising Module.
- *
- * @param[in] p_ble_evt BLE stack event.
- */
-void ble_advertising_on_ble_evt(const ble_evt_t * const p_ble_evt);
-
-
-/**@brief Function for handling system events.
- *
- * @details This function must be called to handle system events that are relevant
- *          for the Advertising Module. Specifically, the advertising module can not use the
- *          softdevice as long as there are pending writes to the flash memory. This
- *          event handler is designed to delay advertising until there is no flash operation.
- *
- * @param[in] sys_evt  System event.
- */
-void ble_advertising_on_sys_evt(uint32_t sys_evt);
-
-
 /**@brief Function for initializing the Advertising Module.
  *
  * @details Encodes the required advertising data and passes it to the stack.
@@ -163,59 +140,15 @@ void ble_advertising_on_sys_evt(uint32_t sys_evt);
  */
 uint32_t ble_advertising_init(ble_advdata_t const                 * p_advdata,
                               ble_advdata_t const                 * p_srdata,
-                              ble_adv_modes_config_t const        * p_config,
-                              ble_advertising_evt_handler_t const   evt_handler,
-                              ble_advertising_error_handler_t const error_handler);
+                              ble_adv_modes_config_t const        * p_config);
+
+void advertising_parm_configer(ble_gap_adv_params_t *adv_params);
+
+void advertising_start(void);
+
+void advertising_stop(void);
 
 
-/**@brief Function for starting advertising.
- *
- * @details You can start advertising in any of the advertising modes that you enabled
- *          during initialization.
- *
- * @param[in] advertising_mode  Advertising mode.
- *
- * @retval @ref NRF_SUCCESS On success, else an error code indicating reason for failure.
- * @retval @ref NRF_ERROR_INVALID_STATE                             
- */
-uint32_t ble_advertising_start(ble_adv_mode_t advertising_mode);
-
-/**@brief Function for setting the peer address.
- *
- * @details The peer address must be set by the application upon receiving a
- *          @ref BLE_ADV_EVT_PEER_ADDR_REQUEST event. Without the peer address, the directed
- *          advertising mode will not be run.
- *
- * @param[in] p_peer_addr  Pointer to a peer address.
- *
- * @retval @ref NRF_SUCCESS Successfully stored the peer address pointer in the advertising module.
- * @retval @ref NRF_ERROR_INVALID_STATE If a reply was not expected.
- */
-uint32_t ble_advertising_peer_addr_reply(ble_gap_addr_t * p_peer_addr);
-
-
-/**@brief Function for setting a whitelist.
- *
- * @details The whitelist must be set by the application upon receiving a
- *          @ref BLE_ADV_EVT_WHITELIST_REQUEST event. Without the whitelist, the whitelist
- *          advertising for fast and slow modes will not be run.
- *
- * @param[in] p_whitelist  Pointer to a whitelist.
- *
- * @retval @ref NRF_SUCCESS Successfully stored pointers to the whitelist into the advertising module.
- * @retval @ref NRF_ERROR_INVALID_STATE If a reply was not expected.
- */
-uint32_t ble_advertising_whitelist_reply(ble_gap_whitelist_t * p_whitelist);
-
-
-/**@brief Function for disabling whitelist advertising.
- *
- * @details This function temporarily disables whitelist advertising.
- *          Calling this function resets the current time-out countdown.
- *
- * @retval @ref NRF_SUCCESS On success, else an error message propogated from the Softdevice.
- */
-uint32_t ble_advertising_restart_without_whitelist(void);
 /** @} */
 
 #endif // BLE_ADVERTISING_H__
